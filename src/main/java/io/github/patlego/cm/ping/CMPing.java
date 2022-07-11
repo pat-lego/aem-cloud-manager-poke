@@ -48,15 +48,11 @@ public class CMPing implements Callable<CMInstance> {
                     } else {
                         this.unAuthenticatedRequest();
                     }
-                } catch (URISyntaxException e) {
+                } catch (Exception e) {
                     logger.error("Caught a " + e.getMessage() + " setting the " + this.instance.getUrl()
                             + " to enabled = false", e);
                     this.instance.setEnabled(Boolean.FALSE);
-                } catch (IOException e) {
-                    logger.error("Caught a " + e.getMessage() + " setting the " + this.instance.getUrl()
-                            + " to enabled = false", e);
-                    this.instance.setEnabled(Boolean.FALSE);
-                }
+                } 
                 lastInvocation = now;
 
                 // Need to set this incase it is null and so it is set to now that way going
@@ -89,7 +85,7 @@ public class CMPing implements Callable<CMInstance> {
         return localDateTime.format(this.formatter);
     }
 
-    public void authenticatedRequest() throws URISyntaxException, IOException {
+    public void authenticatedRequest() throws Exception {
         CredentialsProvider provider = new BasicCredentialsProvider();
         provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(this.instance.getAuth().getUsername(),
                 this.instance.getAuth().getPassword()));
@@ -104,16 +100,16 @@ public class CMPing implements Callable<CMInstance> {
             if (response.getStatusLine().getStatusCode() / 100 == 2) {
                 logger.info(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
-                this.instance.setEnabled(Boolean.TRUE);
             } else {
                 logger.warn(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
-                this.instance.setEnabled(Boolean.FALSE);
             }
         }
+
+        this.instance.setEnabled(Boolean.TRUE);
     }
 
-    public void unAuthenticatedRequest() throws URISyntaxException, IOException {
+    public void unAuthenticatedRequest() throws Exception {
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
 
             String url = buildUrl();
@@ -124,13 +120,13 @@ public class CMPing implements Callable<CMInstance> {
             if (response.getStatusLine().getStatusCode() / 100 == 2) {
                 logger.info(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
-                this.instance.setEnabled(Boolean.TRUE);
             } else {
                 logger.warn(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
-                this.instance.setEnabled(Boolean.FALSE);
             }
         }
+
+        this.instance.setEnabled(Boolean.TRUE);
     }
 
     public String buildUrl() throws URISyntaxException {
