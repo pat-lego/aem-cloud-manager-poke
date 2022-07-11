@@ -26,3 +26,4 @@ target/
 org.eclipse.*
 .project
 .classpath
+.DS_Store

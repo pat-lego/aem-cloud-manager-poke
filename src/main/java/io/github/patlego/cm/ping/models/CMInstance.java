@@ -20,6 +20,9 @@ public class CMInstance {
     // Make sure that the is not blocked by the dispatcher
     private String path;
 
+    // System managed property which is used to determine if the instance should be called
+    private Boolean enabled;
+
     public String getPath() {
         if (this.path == null) {
             return DEFAULT_PATH;
@@ -59,5 +62,15 @@ public class CMInstance {
     }
     public void setLastInvocation(String lastInvocation) {
         this.lastInvocation = lastInvocation;
+    }
+
+    public Boolean getEnabled() {
+        if (null == this.enabled)
+            return Boolean.TRUE;
+
+        return enabled;
+    }
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 }

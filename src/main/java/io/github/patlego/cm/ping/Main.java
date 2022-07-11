@@ -39,18 +39,27 @@ public class Main {
 
     public static void main(String[] args) {
         logger.info("Starting up Cloud Manager poke utility");
-        
+
         AppConfig appConfig = null;
+
+        // Load the JSON config into memory
+        List<String> arguments = getArgs(args);
+        CMReader fileReader = new FileCMReader();
+
+        CMWriter writer = new FileCMWriter();
+
+        boolean initialLoop = true;
 
         // Run the program
         do {
             try {
-                // Load the JSON config into memory
-                List<String> arguments = getArgs(args);
-                CMReader fileReader = new FileCMReader();
-
+                
                 JsonObject appConfigJson = fileReader.getCMInstances(arguments.get(1));
                 appConfig = gson.fromJson(appConfigJson, AppConfig.class);
+
+                if (initialLoop) {
+                    resetEnabledField(appConfig);
+                }
 
                 ExecutorService executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
                 List<Future<CMInstance>> resultList = new LinkedList<>();
@@ -68,9 +77,10 @@ public class Main {
                 }
 
                 executor.shutdown();
-
-                CMWriter writer = new FileCMWriter();
+                
                 writer.write(gson.toJson(appConfig), arguments.get(1));
+
+                initialLoop = false;
 
                 logger.info(String.format("About to sleep for %d seconds", appConfig.getSleep()));
                 Thread.sleep(appConfig.getSleep() * 1000);
@@ -88,7 +98,7 @@ public class Main {
                 logger.error(e.getMessage(), e);
                 System.exit(1);
             }
-        } while(Boolean.FALSE.equals(appConfig.isTerminated()));
+        } while (Boolean.FALSE.equals(appConfig.isTerminated()));
 
     }
 
@@ -107,5 +117,15 @@ public class Main {
         }
 
         return List.of(locationStr, locationPath);
+    }
+
+    public static void resetEnabledField(AppConfig appConfig) {
+        if (appConfig != null) {
+            for (CMInstance instance : appConfig.getCmInstances()) {
+                if (instance != null) {
+                    instance.setEnabled(true);
+                }
+            }
+        }
     }
 }

@@ -33,30 +33,47 @@ public class CMPing implements Callable<CMInstance> {
     }
 
     @Override
-    public CMInstance call() throws Exception {
+    public CMInstance call() {
         logger.info(String.format("Checking to see if %s needs to be invoked", this.instance.getUrl()));
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime lastInvocation = this.getLastInvocation();
 
         if (now.isAfter(lastInvocation.plusSeconds(this.instance.getInterval()))) {
-            logger.info(String.format("About to invoke %s since last invocation has elapsed", this.instance.getUrl()));
+    
+            if (this.instance.getEnabled() == Boolean.TRUE) {
+                logger.info(String.format("About to invoke %s since last invocation has elapsed", this.instance.getUrl()));
+                try {
+                    if (this.instance.hasAuth()) {
+                        this.authenticatedRequest();
+                    } else {
+                        this.unAuthenticatedRequest();
+                    }
+                } catch (URISyntaxException e) {
+                    logger.error("Caught a " + e.getMessage() + " setting the " + this.instance.getUrl()
+                            + " to enabled = false", e);
+                    this.instance.setEnabled(Boolean.FALSE);
+                } catch (IOException e) {
+                    logger.error("Caught a " + e.getMessage() + " setting the " + this.instance.getUrl()
+                            + " to enabled = false", e);
+                    this.instance.setEnabled(Boolean.FALSE);
+                }
+                lastInvocation = now;
 
-            if (this.instance.hasAuth()) {
-                this.authenticatedRequest();
+                // Need to set this incase it is null and so it is set to now that way going
+                // forward it will check against the previous now and not right now.
+                this.instance.setLastInvocation(this.localDateTimeToString(lastInvocation));
+                logger.info(String.format("Completed Cloud Manager ping for %s", this.instance.getUrl()));
             } else {
-                this.unAuthenticatedRequest();
+                logger.info(String.format(
+                        "The instance %s has been black listed since it has failed its previous invocation",
+                        this.instance.getUrl()));
             }
-            lastInvocation = now;
 
         } else {
             logger.info(String.format("No need to invoke since lastInvocation has not elapsed necessary amount of time",
                     this.instance.getUrl()));
         }
 
-        // Need to set this incase it is null and so it is set to now that way going
-        // forward it will check against the previous now and not right now.
-        this.instance.setLastInvocation(this.localDateTimeToString(lastInvocation));
-        logger.info(String.format("Completed Cloud Manager ping for %s", this.instance.getUrl()));
         return this.instance;
     }
 
@@ -87,9 +104,11 @@ public class CMPing implements Callable<CMInstance> {
             if (response.getStatusLine().getStatusCode() / 100 == 2) {
                 logger.info(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
+                this.instance.setEnabled(Boolean.TRUE);
             } else {
                 logger.warn(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
+                this.instance.setEnabled(Boolean.FALSE);
             }
         }
     }
@@ -105,9 +124,11 @@ public class CMPing implements Callable<CMInstance> {
             if (response.getStatusLine().getStatusCode() / 100 == 2) {
                 logger.info(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
+                this.instance.setEnabled(Boolean.TRUE);
             } else {
                 logger.warn(String.format("Received a %d when invoking the %s",
                         response.getStatusLine().getStatusCode(), url));
+                this.instance.setEnabled(Boolean.FALSE);
             }
         }
     }
