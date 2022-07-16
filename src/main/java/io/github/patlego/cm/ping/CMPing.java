@@ -1,6 +1,5 @@
 package io.github.patlego.cm.ping;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,7 +37,7 @@ public class CMPing implements Callable<CMInstance> {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime lastInvocation = this.getLastInvocation();
 
-        if (now.isAfter(lastInvocation.plusSeconds(this.instance.getInterval()))) {
+        if (lastInvocation == null || now.isAfter(lastInvocation.plusSeconds(this.instance.getInterval()))) {
     
             if (this.instance.getEnabled() == Boolean.TRUE) {
                 logger.info(String.format("About to invoke %s since last invocation has elapsed", this.instance.getUrl()));
@@ -75,7 +74,7 @@ public class CMPing implements Callable<CMInstance> {
 
     public LocalDateTime getLastInvocation() {
         if (null == this.instance.getLastInvocation()) {
-            return LocalDateTime.now();
+            return null;
         } else {
             return LocalDateTime.parse(this.instance.getLastInvocation(), formatter);
         }

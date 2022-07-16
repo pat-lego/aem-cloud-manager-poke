@@ -59,6 +59,7 @@ public class Main {
 
                 if (initialLoop) {
                     resetEnabledField(appConfig);
+                    resetLastInvocation(appConfig);
                 }
 
                 ExecutorService executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
@@ -124,6 +125,16 @@ public class Main {
             for (CMInstance instance : appConfig.getCmInstances()) {
                 if (instance != null) {
                     instance.setEnabled(true);
+                }
+            }
+        }
+    }
+
+    public static void resetLastInvocation(AppConfig appConfig) {
+        if (appConfig != null) {
+            for (CMInstance instance : appConfig.getCmInstances()) {
+                if (instance != null) {
+                    instance.setLastInvocation(null);
                 }
             }
         }

@@ -6,17 +6,11 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Launch Current File",
-            "request": "launch",
-            "mainClass": "${file}"
-        },
-        {
-            "type": "java",
             "name": "Launch Main",
             "request": "launch",
             "mainClass": "io.github.patlego.cm.ping.Main",
             "projectName": "cloudmanager-ping",
-            "args": "--location ${workspaceFolder}/cmping.json"
+            "args": "--location ${workspaceFolder}/cm_ping.json"
         }
     ]
 }
